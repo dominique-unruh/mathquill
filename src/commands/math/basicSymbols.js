@@ -16,11 +16,17 @@ var Digit = P(VanillaSymbol, function(_, super_) {
     }
     else super_.createLeftOf.call(this, cursor);
   };
+/*  _.pmathml = function() {
+	  var merror = $("<merror/>");
+	  var mtext = $("<mtext/>").appendTo(merror).text("NYI: Digit.pmathml: "+this.latex());
+	  return merror[0];
+  } */
 });
 
 var Variable = P(Symbol, function(_, super_) {
   _.init = function(ch, html) {
     super_.init.call(this, ch, '<var>'+(html || ch)+'</var>');
+    this.pmmlSource = '<mi>'+(html || ch)+'</mi>';
   };
   _.text = function() {
     var text = this.ctrlSeq;
@@ -33,6 +39,11 @@ var Variable = P(Symbol, function(_, super_) {
       text += '*';
     return text;
   };
+/*  _.pmathml = function() {
+	  var merror = $("<merror/>");
+	  var mtext = $("<mtext/>").appendTo(merror).text("NYI: Variable.pmathml: "+this.latex());
+	  return merror[0];
+  } */
 });
 
 Options.p.autoCommands = { _maxLength: 0 };
@@ -135,6 +146,11 @@ var Letter = P(Variable, function(_, super_) {
   function nonOperatorSymbol(node) {
     return node instanceof Symbol && !(node instanceof BinaryOperator);
   }
+/*  _.pmathml = function() {
+      var merror = $("<merror/>");
+      var mtext = $("<mtext/>").appendTo(merror).text("NYI: Letter.pmathml: "+this.latex());
+      return merror[0];
+  } */
 });
 var BuiltInOpNames = {}; // the set of operator names like \sin, \cos, etc that
   // are built-into LaTeX: http://latex.wikia.com/wiki/List_of_LaTeX_symbols#Named_operators:_sin.2C_cos.2C_etc.
@@ -206,6 +222,11 @@ var OperatorName = P(Symbol, function(_, super_) {
     }
     return Parser.succeed(block.children());
   };
+  _.pmathml = function() {
+	  var merror = $("<merror/>");
+	  var mtext = $("<mtext/>").appendTo(merror).text("NYI: OperatorName.pmathml: "+this.latex());
+	  return merror[0];
+  }
 });
 for (var fn in AutoOpNames) if (AutoOpNames.hasOwnProperty(fn)) {
   LatexCmds[fn] = OperatorName;

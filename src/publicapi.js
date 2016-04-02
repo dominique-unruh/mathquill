@@ -139,6 +139,13 @@ function getInterface(v) {
       this.__controller.root.postOrder('reflow');
       return this;
     };
+    _.pmathml = function(mathml) {
+	if (arguments.length > 0) {
+	    console.error("Setting Presentation MathML not supported yet.");
+	    error();
+	} else
+	    return this.__controller.root.pmathml();
+    };
   });
   MQ.prototype = AbstractMathQuill.prototype;
 

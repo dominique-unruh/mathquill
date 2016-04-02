@@ -68,6 +68,9 @@ var Style = P(MathCommand, function(_, super_) {
   _.init = function(ctrlSeq, tagName, attrs) {
     super_.init.call(this, ctrlSeq, '<'+tagName+' '+attrs+'>&0</'+tagName+'>');
   };
+  _.pmathml = function() {
+      return this.pmathmlError("Style.pmathml");
+  };
 });
 
 //fonts
@@ -114,6 +117,9 @@ var TextColor = LatexCmds.textcolor = P(MathCommand, function(_, super_) {
       })
     ;
   };
+  _.pmathml = function() {
+      return this.pmathmlError("TextColor.pmathml");
+  };
 });
 
 // Very similar to the \textcolor command, but will add the given CSS class.
@@ -132,6 +138,9 @@ var Class = LatexCmds['class'] = P(MathCommand, function(_, super_) {
         return super_.parser.call(self);
       })
     ;
+  };
+  _.pmathml = function() {
+      return this.pmathmlError("Class.pmathml");
   };
 });
 
@@ -269,6 +278,17 @@ var SupSub = P(MathCommand, function(_, super_) {
       };
     }(this, 'sub sup'.split(' ')[i], 'sup sub'.split(' ')[i], 'down up'.split(' ')[i]));
   };
+  _.pmathml = function() {
+      var base = $("<merror>").append($("<mtext>").text("No base"));
+      if (this.sup != null && this.sup != null)
+	  return $("<msubsup insert_previous=1>").append(base,this.sub.pmathml(),this.sup.pmathml())[0];
+      else if (this.sub != null)
+	  return $("<msub insert_previous=1>").append(base,this.sub.pmathml())[0];
+      else if (this.sup != null)
+	  return $("<msup insert_previous=1>").append(base,this.sup.pmathml())[0];
+      else
+	  return this.pmathmlError("SubSup.pmathml: empty");
+  };
 });
 
 function insLeftOfMeUnlessAtEnd(cursor) {
@@ -366,6 +386,9 @@ var SummationNotation = P(MathCommand, function(_, super_) {
     this.upInto = this.ends[R];
     this.ends[L].upOutOf = this.ends[R];
     this.ends[R].downOutOf = this.ends[L];
+  };
+  _.pmathml = function() {
+      return this.pmathmlError("SummationNotation.pmathml");
   };
 });
 
@@ -643,6 +666,18 @@ var Bracket = P(P(MathCommand, DelimsMixin), function(_, super_) {
   _.siblingCreated = function(opts, dir) { // if something typed between ghost and far
     if (dir === -this.side) this.finalizeTree(); // end of its block, solidify
   };
+  _.pmathml = function() {
+      var mfenced = $("<mfenced>");
+      mfenced[0].setAttribute("open",this.sides[L].ch); // Doesn't work with jQuery setter, would lead to open="open" attribute. Why?
+      mfenced[0].setAttribute("close",this.sides[R].ch);
+      console.log("sides",this.sides[L].ch,mfenced[0]);
+      var childrenPmml = [];
+      this.eachChild(function (child) {
+	  var childPmml = child.pmathml();
+	  mfenced.append(childPmml);
+      });
+      return mfenced[0];
+  };
 });
 
 var OPP_BRACKS = {
@@ -789,5 +824,8 @@ var Embed = LatexCmds.embed = P(Symbol, function(_, super_) {
         ;
       })
     ;
+  };
+  _.pmathml = function() {
+      return this.pmathmlError("Embed.pmathml");
   };
 });

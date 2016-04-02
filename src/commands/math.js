@@ -26,6 +26,14 @@ var MathElement = P(Node, function(_, super_) {
     if (self[L].siblingCreated) self[L].siblingCreated(options, R);
     self.bubble('reflow');
   };
+  _.pmathmlError = function(msg) {
+      var merror = $("<merror/>");
+      var mtext = $("<mtext/>").appendTo(merror).text(msg);
+      return merror[0];
+  }
+  _.pmathml = function() {
+      return this.pmathmlError("Can't convert to Presentation MathML: "+this.latex());
+  }
 });
 
 /**
@@ -288,6 +296,29 @@ var MathCommand = P(MathElement, function(_, super_) {
       return text + child.text() + (cmd.textTemplate[i] || '');
     });
   };
+  _.pmathml = function() {
+      var ctrlSeq = this.ctrlSeq;
+      var childrenPmml = [];
+      this.eachChild(function (child) {
+	  var childPmml = child.pmathml();
+	  childrenPmml.push(childPmml);
+      });
+
+      /* if (ctrlSeq == "_{...}^{...}") { // TODO: Can be handled directly in SubSup
+	  var base = $("<merror>").append($("<mtext>").text("No base"));
+
+	  return $("<msubsup insert_previous=1>").append(base,childrenPmml[0],childrenPmml[1])[0];
+      } else*/
+      if (ctrlSeq == "\\frac") {
+	  return $("<mfrac>").append(childrenPmml).attr("latex-source",this.latex())[0]; // TODO: remove
+      } else if (ctrlSeq == "\\sqrt") {
+	  return $("<msqrt>").append(childrenPmml)[0];
+      } else {
+	  var merror = $("<merror/>");
+	  var mtext = $("<mtext/>").appendTo(merror).text("NYI: MathCommand.pmathml: "+this.latex()+" with ctrlSeq "+this.ctrlSeq)
+	  return merror[0];
+      }
+  }
 });
 
 /**
@@ -328,11 +359,33 @@ var Symbol = P(MathCommand, function(_, super_) {
   _.text = function(){ return this.textTemplate; };
   _.placeCursor = noop;
   _.isEmpty = function(){ return true; };
+  _.pmathml = function() {
+      if (this.pmmlSource != undefined) {
+	  var pmml = jQuery.parseHTML(this.pmmlSource);
+	  if (pmml == null || pmml.length!=1 || !(pmml[0] instanceof Element))
+	      return this.pmathmlError("Symbol.pmathml: pmmlSource did not parse to single DOM element: "+this.pmmlSource);
+	  return pmml[0];
+      } else {
+	  return this.pmathmlError("NYI: Symbol.pmathml: "+this.latex());
+      }
+  }
+/*  _.pmathml = function() {
+      return $("<mi class=from-mq-Symbol>").text(this.ctrlSeq)[0];
+  } */
 });
 var VanillaSymbol = P(Symbol, function(_, super_) {
   _.init = function(ch, html) {
     super_.init.call(this, ch, '<span>'+(html || ch)+'</span>');
+    this.isDigit = /^\d$/.test(ch);
+    this.rawHTML = html || ch;
+    this.pmmlSource = '<mo class=from-mq-VanillaSymbol>'+(html || ch)+"</mo>";
   };
+  _.pmathml = function() {
+      if (this.isDigit) {
+	  return $("<mn class='from-mq-Digit'>").text(this.rawHTML)[0];
+      }
+      return this.pmathmlError("NYI: VanillaSymbol.pmathml: "+this.latex());
+  }
 });
 var BinaryOperator = P(Symbol, function(_, super_) {
   _.init = function(ctrlSeq, html, text) {
@@ -340,6 +393,9 @@ var BinaryOperator = P(Symbol, function(_, super_) {
       ctrlSeq, '<span class="mq-binary-operator">'+html+'</span>', text
     );
   };
+  _.pmathml = function() {
+      return $("<mo class=from-mq-BinaryOperator>").attr("form","infix").text(this.ctrlSeq)[0];
+  }
 });
 
 /**
@@ -426,6 +482,27 @@ var MathBlock = P(MathElement, function(_, super_) {
 
     return this;
   };
+  _.pmathml = function() {
+      var mrow = $("<mrow>");
+      this.eachChild(function (child) {
+	  var childPmml = child.pmathml();
+	  var prev = mrow.children().last()[0];
+	  
+	  //console.log('check',child.latex(),childPmml.tagName == 'MN',prev!=undefined,prev!=undefined && prev.tagName == 'MN');
+	  if (childPmml.attributes["insert_previous"] != undefined) {
+	      childPmml.attributes["insert_previous"] = undefined;
+	      if (prev!=null) {
+		  prev.remove();
+		  $(childPmml.children[0]).replaceWith(prev);
+	      }
+	  } else if (childPmml.tagName == 'MN' && prev!=undefined && prev.tagName == 'MN') {
+	      prev.remove();
+	      childPmml.textContent = prev.textContent + childPmml.textContent;
+	  }
+	  mrow.append(childPmml);
+      });
+      return mrow[0];
+  }
 });
 
 API.StaticMath = function(APIClasses) {

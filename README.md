@@ -1,3 +1,6 @@
+This fork of MathQuill contains several additional features:
+* Reading the content of a MathField as Presentation MathML
+
 # [MathQuill](http://mathquill.github.com)
 
 by [Han][], [Jeanine][], and [Mary][] (maintainers@mathquill.com)

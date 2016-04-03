@@ -26,11 +26,14 @@ var MathElement = P(Node, function(_, super_) {
     if (self[L].siblingCreated) self[L].siblingCreated(options, R);
     self.bubble('reflow');
   };
+  _.createMMLElement = function(tag) {
+      return $(document.createElementNS("http://www.w3.org/1998/Math/MathML",tag));
+  };
   _.pmathmlError = function(msg) {
-      var merror = $("<merror/>");
-      var mtext = $("<mtext/>").appendTo(merror).text(msg);
+      var merror = this.createMMLElement("merror");
+      var mtext = this.createMMLElement("mtext").appendTo(merror).text(msg);
       return merror[0];
-  }
+  };
   _.pmathml = function() {
       return this.pmathmlError("Can't convert to Presentation MathML: "+this.latex());
   }
@@ -310,12 +313,12 @@ var MathCommand = P(MathElement, function(_, super_) {
 	  return $("<msubsup insert_previous=1>").append(base,childrenPmml[0],childrenPmml[1])[0];
       } else*/
       if (ctrlSeq == "\\frac") {
-	  return $("<mfrac>").append(childrenPmml).attr("latex-source",this.latex())[0]; // TODO: remove
+	  return this.createMMLElement("mfrac").append(childrenPmml).attr("latex-source",this.latex())[0]; // TODO: remove
       } else if (ctrlSeq == "\\sqrt") {
-	  return $("<msqrt>").append(childrenPmml)[0];
+	  return this.createMMLElement("msqrt").append(childrenPmml)[0];
       } else {
-	  var merror = $("<merror/>");
-	  var mtext = $("<mtext/>").appendTo(merror).text("NYI: MathCommand.pmathml: "+this.latex()+" with ctrlSeq "+this.ctrlSeq)
+	  var merror = this.createMMLElement("merror");
+	  var mtext = this.createMMLElement("mtext").appendTo(merror).text("NYI: MathCommand.pmathml: "+this.latex()+" with ctrlSeq "+this.ctrlSeq)
 	  return merror[0];
       }
   }
@@ -382,7 +385,7 @@ var VanillaSymbol = P(Symbol, function(_, super_) {
   };
   _.pmathml = function() {
       if (this.isDigit) {
-	  return $("<mn class='from-mq-Digit'>").text(this.rawHTML)[0];
+	  return this.createMMLElement("mn").addClass('from-mq-Digit').text(this.rawHTML)[0];
       }
       return this.pmathmlError("NYI: VanillaSymbol.pmathml: "+this.latex());
   }
@@ -394,7 +397,7 @@ var BinaryOperator = P(Symbol, function(_, super_) {
     );
   };
   _.pmathml = function() {
-      return $("<mo class=from-mq-BinaryOperator>").attr("form","infix").text(this.ctrlSeq)[0];
+      return this.createMMLElement("mo").addClass("from-mq-BinaryOperator").attr("form","infix").text(this.ctrlSeq)[0];
   }
 });
 
@@ -483,7 +486,7 @@ var MathBlock = P(MathElement, function(_, super_) {
     return this;
   };
   _.pmathml = function() {
-      var mrow = $("<mrow>");
+      var mrow = this.createMMLElement("mrow");
       this.eachChild(function (child) {
 	  var childPmml = child.pmathml();
 	  var prev = mrow.children().last()[0];

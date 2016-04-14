@@ -183,6 +183,11 @@ var TextBlock = P(Node, function(_, super_) {
   }
 
   _.focus = MathBlock.prototype.focus;
+
+  _.pmathml = function() {
+    console.log("FIXME");
+    return $("<mtext/>").text(this.textContents())[0]; // FIXME: use correct namespace 
+  };
 });
 
 /**

@@ -70,6 +70,12 @@ var latexMathParser = (function() {
 
   latexMath.block = mathBlock;
   latexMath.optBlock = optMathBlock;
+
+// TODO: remove
+  latexMath.command = command;
+  latexMath.group = mathGroup;
+  latexMath.controlSequence = controlSequence;
+
   return latexMath;
 })();
 

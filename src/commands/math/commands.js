@@ -281,11 +281,11 @@ var SupSub = P(MathCommand, function(_, super_) {
   _.pmathml = function() {
       var base = this.createMMLElement("merror").append(this.createMMLElement("mtext").text("No base"));
       if (this.sup != null && this.sub != null) {
-	  return this.createMMLElement("msubsup").attr("insert_previous",1).append(base,this.sub.pmathml(),this.sup.pmathml())[0];
+	  return this.createMMLElement("msubsup").attr("insert_previous",0).append(base,this.sub.pmathml(),this.sup.pmathml())[0];
       } else if (this.sub != null) {
-	  return this.createMMLElement("msub").attr("insert_previous",1).append(base,this.sub.pmathml())[0]; 
+	  return this.createMMLElement("msub").attr("insert_previous",0).append(base,this.sub.pmathml())[0]; 
       } else if (this.sup != null) {
-	  return this.createMMLElement("msup").attr("insert_previous",1).append(base,this.sup.pmathml())[0];
+	  return this.createMMLElement("msup").attr("insert_previous",0).append(base,this.sup.pmathml())[0];
       } else
 	  return this.pmathmlError("SubSup.pmathml: empty");
   };

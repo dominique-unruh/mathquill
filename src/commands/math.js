@@ -313,7 +313,7 @@ var MathCommand = P(MathElement, function(_, super_) {
 	  return $("<msubsup insert_previous=1>").append(base,childrenPmml[0],childrenPmml[1])[0];
       } else*/
       if (ctrlSeq == "\\frac") {
-	  return this.createMMLElement("mfrac").append(childrenPmml).attr("latex-source",this.latex())[0]; // TODO: remove
+	  return this.createMMLElement("mfrac").append(childrenPmml)[0];
       } else if (ctrlSeq == "\\sqrt") {
 	  return this.createMMLElement("msqrt").append(childrenPmml)[0];
       } else {
@@ -395,9 +395,10 @@ var BinaryOperator = P(Symbol, function(_, super_) {
     super_.init.call(this,
       ctrlSeq, '<span class="mq-binary-operator">'+html+'</span>', text
     );
+    this.rawHTML = html;
   };
   _.pmathml = function() {
-      return this.createMMLElement("mo").addClass("from-mq-BinaryOperator").attr("form","infix").text(this.ctrlSeq)[0];
+      return this.createMMLElement("mo").addClass("from-mq-BinaryOperator").attr("form","infix").html(this.rawHTML)[0];
   }
 });
 
@@ -493,7 +494,7 @@ var MathBlock = P(MathElement, function(_, super_) {
 	  
 	  //console.log('check',child.latex(),childPmml.tagName == 'MN',prev!=undefined,prev!=undefined && prev.tagName == 'MN');
 	  if (childPmml.attributes["insert_previous"] != undefined) {
-	      childPmml.attributes["insert_previous"] = undefined;
+	      childPmml.removeAttribute("insert_previous");
 	      if (prev!=null) {
 		  prev.remove();
 		  $(childPmml.children[0]).replaceWith(prev);

@@ -1,4 +1,9 @@
 var pmathmlToMQ = (function () {
+  var PmmlOps = {}
+
+  PmmlOps['·'] = "cdot"
+  PmmlOps['+'] = "+"
+
   function commandToBlock(cmd) {
     var block = MathBlock();
     cmd.adopt(block, 0, 0);
@@ -61,12 +66,16 @@ var pmathmlToMQ = (function () {
     } else if (tag=="mo") {
       var op = math.textContent.trim();
       var cmd = null;
-      if (op.startsWith("\\")) 
+      /* if (op.startsWith("\\")) 
 	cmd = LatexCmds[op.substr(1)]
       else
-	cmd = LatexCmds[op] || CharCmds[op];
-      if (cmd==null)
+	cmd = LatexCmds[op] || CharCmds[op]; */
+      var ctrlSeq = PmmlOps[op]
+      if (ctrlSeq==null)
 	throw Error("Unknown operator "+op);
+      cmd = LatexCmds[ctrlSeq];
+      if (cmd==null)
+	throw Error("Operator "+op+" leads to unknown ctrl seq "+ctrlSeq);
       var op2 = cmd();
       block = commandToBlock(op2);
     } else if (tag=="mfrac") {
@@ -88,6 +97,26 @@ var pmathmlToMQ = (function () {
       for (var i=0; i<n.length; i++)
 	blocks.push(commandToBlock(Digit(n[i])));
       block = joinBlocks(blocks);
+    } else if (tag=="mfenced") {
+      var open = math.getAttribute('open')
+      var close = math.getAttribute('close')
+      if (open==null) open="(";
+      if (close==null) close=")";
+      var ctrlSeq = open;
+      if (ctrlSeq=="{" || ctrlSeq=="[" || ctrlSeq=="}" || ctrlSeq=="]")
+	ctrlSeq = '\\' + ctrlSeq;
+      var end = close;
+      if (end=="{" || end=="[" || end=="}" || end=="]")
+	end = '\\' + end;
+      
+      var bracket = Bracket(0, open, close, ctrlSeq, end);
+      var content = [];
+      for (var i=0; i<children.length; i++)
+	content.push(pmathmlToBlock(children[i]));
+      content = joinBlocks(content);
+      bracket.blocks = [ content ];
+      content.adopt(bracket, 0, 0);
+      block = commandToBlock(bracket);
     } else {
       throw Error("Unsupported Presentation MathML tag '"+tag+"'");
     }

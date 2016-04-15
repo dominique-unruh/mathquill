@@ -1,3 +1,7 @@
+function createMMLElement(tag) {
+  return $(document.createElementNS("http://www.w3.org/1998/Math/MathML",tag));
+};
+
 var pmathmlToMQ = (function () {
   var PmmlOps = {}
 

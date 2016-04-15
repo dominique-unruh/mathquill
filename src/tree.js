@@ -358,6 +358,27 @@ var Fragment = P(function(_) {
 
     return fold;
   };
+  _.pmathml = function() {
+      var mrow = createMMLElement("mrow");
+      this.each(function (child) {
+	  var childPmml = child.pmathml();
+	  var prev = mrow.children().last()[0];
+	  
+	  //console.log('check',child.latex(),childPmml.tagName == 'MN',prev!=undefined,prev!=undefined && prev.tagName == 'MN');
+	  if (childPmml.attributes["insert_previous"] != undefined) {
+	      childPmml.removeAttribute("insert_previous");
+	      if (prev!=null) {
+		  prev.remove();
+		  $(childPmml.children[0]).replaceWith(prev);
+	      }
+	  } else if (childPmml.tagName.toLowerCase() == 'mn' && prev!=undefined && prev.tagName.toLowerCase() == 'mn') {
+	      prev.remove();
+	      childPmml.textContent = prev.textContent + childPmml.textContent;
+	  }
+	  mrow.append(childPmml);
+      });
+      return mrow[0];
+  }
 });
 
 

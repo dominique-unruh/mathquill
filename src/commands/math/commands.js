@@ -279,13 +279,13 @@ var SupSub = P(MathCommand, function(_, super_) {
     }(this, 'sub sup'.split(' ')[i], 'sup sub'.split(' ')[i], 'down up'.split(' ')[i]));
   };
   _.pmathml = function() {
-      var base = this.createMMLElement("merror").append(this.createMMLElement("mtext").text("No base"));
+      var base = createMMLElement("merror").append(createMMLElement("mtext").text("No base"));
       if (this.sup != null && this.sub != null) {
-	  return this.createMMLElement("msubsup").attr("insert_previous",0).append(base,this.sub.pmathml(),this.sup.pmathml())[0];
+	  return createMMLElement("msubsup").attr("insert_previous",0).append(base,this.sub.pmathml(),this.sup.pmathml())[0];
       } else if (this.sub != null) {
-	  return this.createMMLElement("msub").attr("insert_previous",0).append(base,this.sub.pmathml())[0]; 
+	  return createMMLElement("msub").attr("insert_previous",0).append(base,this.sub.pmathml())[0]; 
       } else if (this.sup != null) {
-	  return this.createMMLElement("msup").attr("insert_previous",0).append(base,this.sup.pmathml())[0];
+	  return createMMLElement("msup").attr("insert_previous",0).append(base,this.sup.pmathml())[0];
       } else
 	  return this.pmathmlError("SubSup.pmathml: empty");
   };
@@ -667,7 +667,7 @@ var Bracket = P(P(MathCommand, DelimsMixin), function(_, super_) {
     if (dir === -this.side) this.finalizeTree(); // end of its block, solidify
   };
   _.pmathml = function() {
-      var mfenced = this.createMMLElement("mfenced");
+      var mfenced = createMMLElement("mfenced");
       mfenced[0].setAttribute("open",this.sides[L].ch); // Doesn't work with jQuery setter, would lead to open="open" attribute. Why?
       mfenced[0].setAttribute("close",this.sides[R].ch);
       var childrenPmml = [];

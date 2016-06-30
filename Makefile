@@ -227,3 +227,16 @@ $(SITE):
 
 site-pull: $(SITE)
 	cd $(SITE) && git pull
+
+
+#### Specific to for-gmail branch:
+FOR_GMAIL_BRANCHES = macros
+for-gmail:
+	git pull
+	for b in $(FOR_GMAIL_BRANCHES); do git merge "origin/$$b"; done
+	make
+	cp -a build/* cdn/
+	echo -n "Git commit: " >cdn/info.txt
+	git describe --always --tags >>cdn/info.txt
+	echo "Included branches: $(FOR_GMAIL_BRANCHES)" >>cdn/info.txt
+	git commit -m "Merged and updated CDN"

@@ -236,7 +236,7 @@ for-gmail:
 	for b in $(FOR_GMAIL_BRANCHES); do git merge "origin/$$b"; done
 	make
 	cp -a build/* cdn/
-	echo -n "Git commit: " >cdn/info.txt
-	git describe --always --tags >>cdn/info.txt
-	echo "Included branches: $(FOR_GMAIL_BRANCHES)" >>cdn/info.txt
-	git commit -m "Merged and updated CDN"
+	#echo -n "Git commit: " >cdn/info.txt
+	#git describe --always --tags >>cdn/info.txt
+	#echo "Included branches: $(FOR_GMAIL_BRANCHES)" >>cdn/info.txt
+	git commit -a -m "Merged and updated CDN"

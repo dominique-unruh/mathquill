@@ -230,7 +230,7 @@ site-pull: $(SITE)
 
 
 #### Specific to for-gmail branch:
-FOR_GMAIL_BRANCHES = macros
+FOR_GMAIL_BRANCHES = macros langle-rangle-vert
 for-gmail:
 	git pull
 	for b in $(FOR_GMAIL_BRANCHES); do git merge "origin/$$b"; done

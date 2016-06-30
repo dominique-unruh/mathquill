@@ -240,3 +240,4 @@ for-gmail:
 	#git describe --always --tags >>cdn/info.txt
 	#echo "Included branches: $(FOR_GMAIL_BRANCHES)" >>cdn/info.txt
 	git commit -a -m "Merged and updated CDN"
+	git push

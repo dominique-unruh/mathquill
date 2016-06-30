@@ -234,8 +234,10 @@ FOR_GMAIL_BRANCHES = macros langle-rangle-vert
 for-gmail:
 	git pull
 	for b in $(FOR_GMAIL_BRANCHES); do git merge "origin/$$b"; done
+	rm -rf build
 	make
-	cp -a build/* cdn/
+	rm -rf cdn
+	mv build cdn
 	#echo -n "Git commit: " >cdn/info.txt
 	#git describe --always --tags >>cdn/info.txt
 	#echo "Included branches: $(FOR_GMAIL_BRANCHES)" >>cdn/info.txt

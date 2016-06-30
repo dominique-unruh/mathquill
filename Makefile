@@ -238,6 +238,7 @@ for-gmail:
 	make
 	rm -rf cdn
 	mv build cdn
+	rm -f cdn/.exists--used_by_Makefile
 	#echo -n "Git commit: " >cdn/info.txt
 	#git describe --always --tags >>cdn/info.txt
 	#echo "Included branches: $(FOR_GMAIL_BRANCHES)" >>cdn/info.txt

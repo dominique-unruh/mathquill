@@ -1,2 +1,0 @@
-Git commit: v0.10.1-3-g8d08aac
-Included branches: macros

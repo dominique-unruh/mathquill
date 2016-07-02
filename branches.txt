@@ -2,3 +2,4 @@ macros: Support for macros (abbreviations that expand automatically to more comp
 langle-rangle-vert: Support for \langle,\rangle,\lVert,\rVert brackets
 for-gmail: Version of MathQuill used for mathquill-for-gmail
 pmathml: Presentation MathML support
+cases: Support for \begin{cases}

@@ -3,3 +3,5 @@ langle-rangle-vert: Support for \langle,\rangle,\lVert,\rVert brackets
 for-gmail: Version of MathQuill used for mathquill-for-gmail
 pmathml: Presentation MathML support
 cases: Support for \begin{cases}
+no-blur: Modification of behavior: Selection not cleared on blur
+for-proof-editor: Version of MathQuill used for proof-editor

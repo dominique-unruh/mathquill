@@ -53,7 +53,8 @@ Controller.open(function(_) {
     ctrlr.blurred = true;
     textarea.bind('cut paste', false)
     .focus(function() { ctrlr.blurred = false; }).blur(function() {
-      if (cursor.selection) cursor.selection.clear();
+      //if (cursor.selection) cursor.selection.clear();
+      if (cursor.selection) cursor.selection.jQ.addClass('mq-blur');
       setTimeout(detach); //detaching during blur explodes in WebKit
     });
     function detach() {

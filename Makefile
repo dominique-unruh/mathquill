@@ -177,6 +177,7 @@ for-proof-editor:
 	for b in $(FOR_PROOF_EDITOR_BRANCHES); do git merge "origin/$$b"; done
 	rm -rf build
 	make
+	git push
 	git commit -a -m "Remerged branches ($(FOR_PROOF_EDITOR_BRANCHES))"
 	git push
 

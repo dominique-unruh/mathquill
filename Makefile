@@ -167,3 +167,16 @@ test: dev $(BUILD_TEST) $(BASIC_JS) $(BASIC_CSS)
 
 $(BUILD_TEST): $(INTRO) $(SOURCES_FULL) $(UNIT_TESTS) $(OUTRO) $(BUILD_DIR_EXISTS)
 	cat $^ > $@
+
+
+
+#### Specific to for-proof-editor branch:
+FOR_PROOF_EDITOR_BRANCHES = no-blur
+for-proof-editor:
+	git pull
+	for b in $(FOR_PROOF_EDITOR_BRANCHES); do git merge "origin/$$b"; done
+	rm -rf build
+	make
+	git commit -a -m "Remerged branches ($(FOR_PROOF_EDITOR_BRANCHES))"
+	git push
+

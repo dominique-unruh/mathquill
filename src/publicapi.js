@@ -15,7 +15,7 @@ var API = {}, Options = P(), optionProcessors = {}, Progenote = P(), EMBEDS = {}
 function insistOnInterVer() {
   if (window.console) console.warn(
     'You are using the MathQuill API without specifying an interface version, ' +
-    'which will fail in v1.0.0. You can fix this easily by doing this before ' +
+    'which will fail in v1.0.0. Easiest fix is to do the following before ' +
     'doing anything else:\n' +
     '\n' +
     '    MathQuill = MathQuill.getInterface(1);\n' +
@@ -31,6 +31,7 @@ function MathQuill(el) {
   return MQ1(el);
 };
 MathQuill.prototype = Progenote.p;
+MathQuill.VERSION = "{VERSION}";
 MathQuill.interfaceVersion = function(v) {
   // shim for #459-era interface versioning (ended with #495)
   if (v !== 1) throw 'Only interface version 1 supported. You specified: ' + v;
@@ -77,6 +78,7 @@ function getInterface(v) {
 
   MQ.L = L;
   MQ.R = R;
+  MQ.saneKeyboardEvents = saneKeyboardEvents;
 
   function config(currentOptions, newOptions) {
     if (newOptions && newOptions.handlers) {
@@ -161,6 +163,15 @@ function getInterface(v) {
       if (this.__controller.blurred) this.__controller.cursor.hide().parent.blur();
       return this;
     };
+    _.empty = function() {
+      var root = this.__controller.root, cursor = this.__controller.cursor;
+      root.eachChild('postOrder', 'dispose');
+      root.ends[L] = root.ends[R] = 0;
+      root.jQ.empty();
+      delete cursor.selection;
+      cursor.insAtRightEnd(root);
+      return this;
+    };
     _.cmd = function(cmd) {
       var ctrlr = this.__controller.notify(), cursor = ctrlr.cursor;
       if (/^\\[a-z]+$/i.test(cmd)) {
@@ -215,6 +226,19 @@ function getInterface(v) {
       this.__controller.seek($(el), pageX, pageY);
       var cmd = Embed().setOptions(options);
       cmd.createLeftOf(this.__controller.cursor);
+    };
+    _.clickAt = function(clientX, clientY, target) {
+      target = target || document.elementFromPoint(clientX, clientY);
+
+      var ctrlr = this.__controller, root = ctrlr.root;
+      if (!jQuery.contains(root.jQ[0], target)) target = root.jQ[0];
+      ctrlr.seek($(target), clientX + pageXOffset, clientY + pageYOffset);
+      if (ctrlr.blurred) this.focus();
+      return this;
+    };
+    _.ignoreNextMousedown = function(fn) {
+      this.__controller.cursor.options.ignoreNextMousedown = fn;
+      return this;
     };
   });
   MQ.EditableField = function() { throw "wtf don't call me, I'm 'abstract'"; };

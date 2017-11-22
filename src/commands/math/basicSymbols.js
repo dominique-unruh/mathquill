@@ -24,13 +24,22 @@ var Variable = P(Symbol, function(_, super_) {
   };
   _.text = function() {
     var text = this.ctrlSeq;
-    if (this[L] && !(this[L] instanceof Variable)
-        && !(this[L] instanceof BinaryOperator)
-        && this[L].ctrlSeq !== "\\ ")
-      text = '*' + text;
-    if (this[R] && !(this[R] instanceof BinaryOperator)
-        && !(this[R] instanceof SupSub))
-      text += '*';
+    if (this.isPartOfOperator) {
+      if (text[0] == '\\') {
+        text = text.slice(1, text.length);
+      }
+      else if (text[text.length-1] == ' ') {
+        text = text.slice (0, -1);
+      }
+    } else {
+      if (this[L] && !(this[L] instanceof Variable)
+          && !(this[L] instanceof BinaryOperator)
+          && this[L].ctrlSeq !== '\\ ')
+        text = '*' + text;
+      if (this[R] && !(this[R] instanceof BinaryOperator)
+          && !(this[R] instanceof SupSub))
+        text += '*';
+    }
     return text;
   };
 });
@@ -59,29 +68,31 @@ optionProcessors.autoCommands = function(cmds) {
 var Letter = P(Variable, function(_, super_) {
   _.init = function(ch) { return super_.init.call(this, this.letter = ch); };
   _.createLeftOf = function(cursor) {
+    super_.createLeftOf.apply(this, arguments);
     var autoCmds = cursor.options.autoCommands, maxLength = autoCmds._maxLength;
     if (maxLength > 0) {
       // want longest possible autocommand, so join together longest
       // sequence of letters
-      var str = this.letter, l = cursor[L], i = 1;
-      while (l instanceof Letter && i < maxLength) {
+      var str = '', l = this, i = 0;
+      // FIXME: l.ctrlSeq === l.letter checks if first or last in an operator name
+      while (l instanceof Letter && l.ctrlSeq === l.letter && i < maxLength) {
         str = l.letter + str, l = l[L], i += 1;
       }
       // check for an autocommand, going thru substrings longest to shortest
       while (str.length) {
         if (autoCmds.hasOwnProperty(str)) {
-          for (var i = 2, l = cursor[L]; i < str.length; i += 1, l = l[L]);
-          Fragment(l, cursor[L]).remove();
+          for (var i = 1, l = this; i < str.length; i += 1, l = l[L]);
+          Fragment(l, this).remove();
           cursor[L] = l[L];
           return LatexCmds[str](str).createLeftOf(cursor);
         }
         str = str.slice(1);
       }
     }
-    super_.createLeftOf.apply(this, arguments);
   };
   _.italicize = function(bool) {
     this.isItalic = bool;
+    this.isPartOfOperator = !bool;
     this.jQ.toggleClass('mq-operator-name', !bool);
     return this;
   };
@@ -103,7 +114,7 @@ var Letter = P(Variable, function(_, super_) {
     // removeClass and delete flags from all letters before figuring out
     // which, if any, are part of an operator name
     Fragment(l[R] || this.parent.ends[L], r[L] || this.parent.ends[R]).each(function(el) {
-      el.italicize(true).jQ.removeClass('mq-first mq-last');
+      el.italicize(true).jQ.removeClass('mq-first mq-last mq-followed-by-supsub');
       el.ctrlSeq = el.letter;
     });
 
@@ -122,8 +133,21 @@ var Letter = P(Variable, function(_, super_) {
           first.ctrlSeq = (isBuiltIn ? '\\' : '\\operatorname{') + first.ctrlSeq;
           last.ctrlSeq += (isBuiltIn ? ' ' : '}');
           if (TwoWordOpNames.hasOwnProperty(word)) last[L][L][L].jQ.addClass('mq-last');
-          if (nonOperatorSymbol(first[L])) first.jQ.addClass('mq-first');
-          if (nonOperatorSymbol(last[R])) last.jQ.addClass('mq-last');
+          if (!shouldOmitPadding(first[L])) first.jQ.addClass('mq-first');
+          if (!shouldOmitPadding(last[R])) {
+            if (last[R] instanceof SupSub) {
+              var supsub = last[R]; // XXX monkey-patching, but what's the right thing here?
+              // Have operatorname-specific code in SupSub? A CSS-like language to style the
+              // math tree, but which ignores cursor and selection (which CSS can't)?
+              var respace = supsub.siblingCreated = supsub.siblingDeleted = function() {
+                supsub.jQ.toggleClass('mq-after-operator-name', !(supsub[R] instanceof Bracket));
+              };
+              respace();
+            }
+            else {
+              last.jQ.toggleClass('mq-last', !(last[R] instanceof Bracket));
+            }
+          }
 
           i += len - 1;
           first = last;
@@ -132,12 +156,13 @@ var Letter = P(Variable, function(_, super_) {
       }
     }
   };
-  function nonOperatorSymbol(node) {
-    return node instanceof Symbol && !(node instanceof BinaryOperator);
+  function shouldOmitPadding(node) {
+    // omit padding if no node, or if node already has padding (to avoid double-padding)
+    return !node || (node instanceof BinaryOperator) || (node instanceof SummationNotation);
   }
 });
 var BuiltInOpNames = {}; // the set of operator names like \sin, \cos, etc that
-  // are built-into LaTeX: http://latex.wikia.com/wiki/List_of_LaTeX_symbols#Named_operators:_sin.2C_cos.2C_etc.
+  // are built-into LaTeX, see Section 3.17 of the Short Math Guide: http://tinyurl.com/jm9okjc
   // MathQuill auto-unitalicizes some operator names not in that set, like 'hcf'
   // and 'arsinh', which must be exported as \operatorname{hcf} and
   // \operatorname{arsinh}. Note: over/under line/arrow \lim variants like
@@ -232,6 +257,7 @@ LatexCmds.f = P(Letter, function(_, super_) {
 LatexCmds[' '] = LatexCmds.space = bind(VanillaSymbol, '\\ ', '&nbsp;');
 
 LatexCmds["'"] = LatexCmds.prime = bind(VanillaSymbol, "'", '&prime;');
+LatexCmds['″'] = LatexCmds.dprime = bind(VanillaSymbol, '″', '&Prime;');
 
 LatexCmds.backslash = bind(VanillaSymbol,'\\backslash ','\\');
 if (!CharCmds['\\']) CharCmds['\\'] = LatexCmds.backslash;
@@ -406,9 +432,28 @@ var PlusMinus = P(BinaryOperator, function(_) {
   _.init = VanillaSymbol.prototype.init;
 
   _.contactWeld = _.siblingCreated = _.siblingDeleted = function(opts, dir) {
+    function determineOpClassType(node) {
+      if (node[L]) {
+        // If the left sibling is a binary operator or a separator (comma, semicolon, colon)
+        // or an open bracket (open parenthesis, open square bracket)
+        // consider the operator to be unary
+        if (node[L] instanceof BinaryOperator || /^[,;:\(\[]$/.test(node[L].ctrlSeq)) {
+          return '';
+        }
+      } else if (node.parent && node.parent.parent && node.parent.parent.isStyleBlock()) {
+        //if we are in a style block at the leftmost edge, determine unary/binary based on
+        //the style block
+        //this allows style blocks to be transparent for unary/binary purposes
+        return determineOpClassType(node.parent.parent);
+      } else {
+        return '';
+      }
+
+      return 'mq-binary-operator';
+    };
+    
     if (dir === R) return; // ignore if sibling only changed on the right
-    this.jQ[0].className =
-      (!this[L] || this[L] instanceof BinaryOperator ? '' : 'mq-binary-operator');
+    this.jQ[0].className = determineOpClassType(this);
     return this;
   };
 });
